@@ -1,7 +1,5 @@
 resource "azurerm_storage_account" "main" {
-  for_each = local.static_site_config_map
-
-  name                     = "${module.naming.storage_account.name}${each.value.identifier}"
+  name                     = "${module.naming.storage_account.name}${var.static_site_config.identifier}"
   resource_group_name      = azurerm_resource_group.main.name
   location                 = azurerm_resource_group.main.location
   account_kind             = "StorageV2"
@@ -10,32 +8,34 @@ resource "azurerm_storage_account" "main" {
   min_tls_version          = var.storage_account_consts.min_tls_version
 
   static_website {
-    index_document     = each.value.index_document
-    error_404_document = each.value.error_404_document
+    index_document     = var.static_site_config.index_document
+    error_404_document = var.static_site_config.error_404_document
   }
 
   dynamic "custom_domain" {
-    for_each = each.value.domain != null ? each.value.domain.name != null ? [1] : [] : []
+    for_each = var.static_site_config.domain != null ? var.static_site_config.domain.name != null ? [1] : [] : []
     content {
-      name          = each.value.domain.name
-      use_subdomain = each.value.domain.asverify_enabled
+      name          = var.static_site_config.domain.name
+      use_subdomain = var.static_site_config.domain.asverify_enabled
     }
   }
 
   tags = merge(
     local.auto_tags,
     {
-      "static_site_config_identifier" = each.value.identifier,
+      "static_site_config_identifier" = var.static_site_config.identifier,
       "last_run_on"                   = timestamp()
     }
   )
+
+  depends_on = [cloudflare_record.asverify]
 }
 
 resource "azurerm_storage_blob" "main" {
   for_each = local.html_files
 
   name                   = each.value.file
-  storage_account_name   = azurerm_storage_account.main[each.value.config.identifier].name
+  storage_account_name   = azurerm_storage_account.main.name
   storage_container_name = "$web"
   type                   = "Block"
   source                 = each.key

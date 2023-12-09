@@ -19,12 +19,6 @@ terraform {
       version = ">= 0.9.2"
     }
   }
-  # backend "azurerm" {
-  #   resource_group_name  = "my-resource-group" // value will be assigned at runtime
-  #   storage_account_name = "my-storage-account" // value will be assigned at runtime
-  #   container_name       = "my-container" // value will be assigned at runtime
-  #   key                  = "terraform.tfstate" // value will be assigned at runtime
-  # }
 }
 
 provider "azurerm" {
@@ -32,7 +26,7 @@ provider "azurerm" {
 }
 
 provider "cloudflare" {
-  api_token = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" // value will be assigned at runtime
+  api_token = var.cloudflare_api_token
 }
 
 # provider "random" {}

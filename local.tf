@@ -25,11 +25,17 @@ locals {
     "**/*.scss"
   ]
 
-  static_site_config_map = { for config in var.static_site_config : config.identifier => config }
+  # cloudflare_domain_recrods = { for site in var.static_site_config : site.domain != null && site.domain.cloudflare != null ? site.domain.name : null => site != null && site.domain.cloudflare != null ? site : null }
 
-  html_files = merge([
-    for config in var.static_site_config : {
-      for file in fileset(format("%s/%s", path.root, config.src), "**") : format("%s/%s/%s", path.root, config.src, file) => { "config" : config, "file" : file } if !anytrue([for pattern in local.exclude_patterns : can(regex(pattern, file))])
-    }
-  ]...)
+  # cloudflare_asverify_domain_records = { for site in var.static_site_config : site.domain != null && site.domain.cloudflare != null && site.domain.asverify_enabled == true ? site.domain.name : null => site != null && site.domain.cloudflare != null && site.domain.asverify_enabled == true ? site : null }
+
+  # html_files = merge([
+  #   for config in var.static_site_config : {
+  #     for file in fileset(format("%s/%s", path.root, config.src), "**") : format("%s/%s/%s", path.root, config.src, file) => { "config" : config, "file" : file } if !anytrue([for pattern in local.exclude_patterns : can(regex(pattern, file))])
+  #   }
+  # ]...)
+
+  html_files = {
+    for file in fileset(format("%s/%s", path.root, var.static_site_config.src), "**") : format("%s/%s/%s", path.root, var.static_site_config.src, file) => { "config" : var.static_site_config, "file" : file } if !anytrue([for pattern in local.exclude_patterns : can(regex(pattern, file))])
+  }
 }
